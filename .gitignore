@@ -1,0 +1,7 @@
+models/clasificador_decadas/checkpoint-234/optimizer.pt
+models/clasificador_decadas/checkpoint-234/rng_state.pth
+models/clasificador_decadas/checkpoint-234/scaler.pt
+models/clasificador_decadas/checkpoint-234/scheduler.pt
+models/clasificador_decadas/checkpoint-234/trainer_state.json
+models/clasificador_decadas/checkpoint-234/training_args.bin
+.idea/

@@ -1,0 +1,29 @@
+{
+  "modelo_base": "distilbert-base-uncased",
+  "tarea": "clasificacion_decada",
+  "corpus": "canciones_ingles_mongodb",
+  "decadas": [
+    "90s",
+    "2000s",
+    "2010s",
+    "2020s"
+  ],
+  "split": {
+    "train": 2494,
+    "val": 535,
+    "test": 535
+  },
+  "finetuned": {
+    "accuracy": 0.40373831775700936,
+    "f1_macro": 0.39714088811702736
+  },
+  "zero_shot": {
+    "modelo": "cross-encoder/nli-MiniLM2-L6-H768",
+    "accuracy": 0.255,
+    "f1_macro": 0.1104016064257028
+  },
+  "ganancia": {
+    "accuracy": 0.14873831775700935,
+    "f1_macro": 0.28673928169132457
+  }
+}
