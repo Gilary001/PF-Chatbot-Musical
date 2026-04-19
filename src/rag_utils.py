@@ -42,7 +42,7 @@ def chunking_por_estrofa(lista_canciones):
             texto_limpio = estrofa.strip()
 
             if len(texto_limpio.split()) > 5:
-                # Asegura que si la estrofa es demasiado larga (> 1000 caracteres) el sistema la divida
+                # Asegura que si la estrofa es demasiado larga (> 1000 caracteres) el sistema la divida cada 800
                 if len(texto_limpio) > 1000:
                     for i in range(0, len(texto_limpio), 800):
                         sub_texto = texto_limpio[i: i + 800]
@@ -116,46 +116,52 @@ def mostrar_metricas_chunking(lista_chunks, nombre_estrategia):
 
 #                       -------------------------------Embeddings------------------------------
 def generar_o_cargar_embeddings(lista_chunks, nombre_archivo, modelo):
-    # Definir el nombre del archivo (agregamos .pkl automáticamente)
     ruta_archivo = f"{nombre_archivo}.pkl"
 
-    # Realiza la siguiente pregunta ¿Ya existe el archivo en la carpeta?
+    # 1. REVISAR SI EL ARCHIVO YA EXISTE
     if os.path.exists(ruta_archivo):
-        print(f"Cargando desde caché: {ruta_archivo}")
+        print(f"Cargando desde caché: {ruta_archivo} (Ahorrando tiempo...)")
         with open(ruta_archivo, "rb") as f:
-            embeddings = pickle.load(f)
-        return embeddings
+            datos_completos = pickle.load(f)
 
-    # Si no existe la fabrica
-    print(f"Generando {len(lista_chunks)} embeddings... (esto puede tardar)")
+        # Extraemos los vectores para que FAISS pueda trabajar
+        vectores = np.array([d["vector"] for d in datos_completos]).astype('float32')
+        return vectores, datos_completos
 
-    # Extraemos solo el texto de cada diccionario
-    # Usamos 'texto_ia'
+    # 2. SI NO EXISTE, GENERAR TODO
+    print(f"Generando {len(lista_chunks)} embeddings por primera vez...")
     solo_textos = [ch["texto_ia"] for ch in lista_chunks]
+    vectores = modelo.encode(solo_textos, show_progress_bar=True)
 
-    embeddings = modelo.encode(solo_textos, show_progress_bar=True)
+    # Crea Texto + Vector
+    datos_completos = []
+    for i, chunk in enumerate(lista_chunks):
+        datos_completos.append({
+            "texto_ia": chunk["texto_ia"],
+            "vector": vectores[i]
+        })
 
-    # Guardamos el resultado en el disco (creamos la caché)
+    # GUARDAR PARA LA PRÓXIMA VEZ
     with open(ruta_archivo, "wb") as f:
-        pickle.dump(embeddings, f)
+        pickle.dump(datos_completos, f)
 
-    print(f"Embeddings guardados en: {ruta_archivo}")
-    return embeddings
+    print(f"Proceso terminado y guardado en: {ruta_archivo}")
+    return vectores, datos_completos
 
 #                       ----------------------Creacion de Indice FAISS----------------------
 def crear_indice_faiss(embeddings_datos):
-    # 1. Obtener la dimensión
+    # Obtener la dimensión
     dimension = embeddings_datos.shape[1]
 
-    # 2. Crear el índice 'FlatL2'
+    # Crear el índice 'FlatL2'
     indice = faiss.IndexFlatL2(dimension)
 
-    # 3. Normaliza los vectores (Esto es para que la búsqueda sea por 'Similitud Coseno')
-    # Ayuda a que la IA encuentre mejor los significados aunque las frases tengan largos distintos
+    # Normaliza los vectores (Esto es para que la búsqueda sea por 'Similitud Coseno')
+    # Ayuda a que se encuentre mejor los significados aunque las frases tengan largos distintos
     embeddings_norm = embeddings_datos.copy().astype('float32')
     faiss.normalize_L2(embeddings_norm)
 
-    # 4. Agregar los vectores al índice
+    # Agregar los vectores al índice
     indice.add(embeddings_norm)
 
     print(f"Índice FAISS creado: {indice.ntotal} vectores, dimensión {dimension}")
@@ -163,7 +169,7 @@ def crear_indice_faiss(embeddings_datos):
 
 #                                       -------------Busqueda Semantica---------------
 def buscar_chunks_relevantes(pregunta, indice_FAISS, chunks, modelo, top_k=5):
-    # 1. Proceso de búsqueda (lo que ya tenías)
+    # Proceso de búsqueda
     embedding_pregunta = modelo.encode([pregunta]).astype('float32')
     faiss.normalize_L2(embedding_pregunta)
     distancias, indices = indice_FAISS.search(embedding_pregunta, top_k)
@@ -195,7 +201,7 @@ def buscar_chunks_relevantes(pregunta, indice_FAISS, chunks, modelo, top_k=5):
         lineas = info_completa.split('\n')
         print(f"{lineas[0]}")  # Song: ... | Artist: ...
 
-        # Si hay letra, mostramos; si no, evitamos error
+        # Si hay letra, mostramos si no, evitamos error
         if len(lineas) > 1:
             print(f"{lineas[1][:150]}...")
 
@@ -277,6 +283,15 @@ def rag_completo(pregunta, indice_faiss, chunks, modelo_emb, top_k=3, modelo="lo
     print(f"{'=' * 60}")
 
     return respuesta
+
+
+def sin_rag(pregunta):
+    prompt = f"Question: {pregunta} Answer:"
+
+    inputs = tokenizer_local(prompt, return_tensors="pt")
+    outputs = model_local.generate(**inputs, max_new_tokens=50)
+
+    return tokenizer_local.decode(outputs[0], skip_special_tokens=True)
 
 
 
