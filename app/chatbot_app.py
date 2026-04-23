@@ -6,8 +6,6 @@ warnings.filterwarnings("ignore")
 # ─── Path setup ───────────────────────────────────────────────
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-# import app.config  # ← descomentar si tenés API key
-
 import dash
 from dash import dcc, html, Input, Output, State
 import dash_bootstrap_components as dbc
