@@ -14,21 +14,29 @@ RUTA_MODELO_CLASIFICADOR = os.path.abspath(
 
 # ─── PROMPT EN ESPAÑOL ─────────────────────────────────────────
 SYSTEM_PROMPT = """
-Eres HistoryBot, un historiador musical experto en música en inglés.
+You are HistoryBot, a music historian specializing in English-language music.
 
-Tu conocimiento proviene exclusivamente de un corpus real de letras de canciones
-desde los años 90 hasta los 2020s.
+Your knowledge comes exclusively from a real corpus of song lyrics
+from the 1990s to the 2020s.
 
-Reglas estrictas:
-- Respondes SIEMPRE en español.
-- Las canciones pueden estar en inglés, pero tu explicación es en español.
-- Siempre mencionas artista, título de la canción y año cuando cites ejemplos.
-- No inventas canciones.
-- No inventas datos fuera del corpus.
-- Solo puedes hablar sobre historia musical y letras.
+Strict rules:
+- You ALWAYS answer in English.
 
-Si la pregunta no es sobre música o letras, responde:
-"Eso está fuera de mi área como historiador musical."
+- The songs can be in English, so your explanation is in English.
+
+- In the exact moment the user writes to you in Spanish, tell them "Please write in English", don't give them a response..
+
+- Always mention the artist, song title, and year when citing examples.
+
+- You don't make up songs.
+
+- You don't invent information outside the corpus.
+
+- You can only talk about music history and lyrics.
+
+If the question isn't about music or lyrics, answer:
+
+"That's outside my area as a music historian."
 """
 
 
@@ -126,11 +134,11 @@ class HistoryBotEngine:
     def _es_pregunta_general(self, pregunta):
         texto = pregunta.lower()
         palabras_generales = [
-            "cómo evolucionó",
-            "qué temas dominaban",
-            "qué caracteriza",
-            "cómo cambió",
-            "diferencias entre"
+            "How it evolved",
+            "What themes dominated",
+            "What characterizes it",
+            "How it changed",
+            "Differences between"
         ]
         return any(p in texto for p in palabras_generales)
 
@@ -138,11 +146,11 @@ class HistoryBotEngine:
         texto = pregunta.lower()
 
         palabras_clave = [
-            "canción", "canciones", "artista", "álbum",
+            "song", "songs", "artist", "album",
             "rock", "pop", "hip hop",
-            "90", "2000", "2010", "2020",
-            "letra", "tema", "género",
-            "decada", "década"
+            "90s", "2000s", "2010s", "2020s",
+            "lyrics", "theme", "genre",
+            "decade", "era"
         ]
 
         return any(p in texto for p in palabras_clave)
@@ -151,11 +159,11 @@ class HistoryBotEngine:
         texto = pregunta.lower().strip()
 
         saludos_puros = [
-            "hola",
-            "buenas",
-            "buenos días",
-            "buenas tardes",
-            "buenas noches"
+            "hello",
+            "hi",
+            "Good Morning",
+            "Good Afternoon",
+            "Good Night"
         ]
 
         return texto in saludos_puros
@@ -167,7 +175,7 @@ class HistoryBotEngine:
 
         # 0. Saludo inicial
         if self._es_saludo_inicial(pregunta) and len(self.historial) == 0:
-            respuesta = "Hola 🙂 Soy tu historiador musical. ¿Qué década o artista te interesa?"
+            respuesta = "Hi 🙂 I'm your music historian. What decade or artist are you interested in?"
             self.historial.append(f"Usuario: {pregunta}")
             self.historial.append(f"HistoryBot: {respuesta}")
             return respuesta, None, []
@@ -177,17 +185,17 @@ class HistoryBotEngine:
 
             texto = pregunta.lower().strip()
 
-            if texto in ["ok", "vale", "bien", "perfecto"]:
-                respuesta = "Perfecto 🙂 Cuando quieras hablar de música, dime la década o el artista que te interesa."
+            if texto in ["ok", "okay", "good", "perfect"]:
+                respuesta = "Perfect 🙂 When you want to talk about music, tell me the decade or artist you're interested in."
 
-            elif texto in ["?", "qué?", "como?", "cómo?"]:
-                respuesta = "¿Podrías especificar un poco más tu pregunta sobre música?"
+            elif texto in ["?", "what?", "like?", "how?"]:
+                respuesta = "Could you be a little more specific about your question regarding music?"
 
-            elif "cómo estás" in texto or "como estas" in texto:
-                respuesta = "Muy bien 🙂 Siempre listo para hablar de música. ¿Sobre qué época te interesa conversar?"
+            elif "how are you" in texto or "how are you?" in texto:
+                respuesta = "Great 🙂 Always ready to talk about music. What era are you interested in discussing?"
 
             else:
-                respuesta = "Puedo ayudarte con historia musical, artistas, décadas o análisis de letras. ¿Qué te interesa?"
+                respuesta = "I can help you with music history, artists, decades, or lyric analysis. What are you interested in?"
 
             self.historial.append(f"Usuario: {pregunta}")
             self.historial.append(f"HistoryBot: {respuesta}")
