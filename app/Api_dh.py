@@ -12,7 +12,7 @@ bot = MúsicBotCUC()
 # --- DISEÑO DE LA INTERFAZ (Layout) ---
 app.layout = dbc.Container([
     dbc.Row([
-        dbc.Col(html.H1("ElvIA - ChatBot", className="text-center my-4"), width=12)
+        dbc.Col(html.H1("HistoryBot - ChatBot", className="text-center my-4"), width=12)
     ]),
 
     dbc.Row([
