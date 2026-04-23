@@ -40,7 +40,8 @@ if os.path.exists(FAISS_PATH):
 else:
     print("Construyendo índice FAISS desde embeddings...")
     from src.rag_utils import generar_o_cargar_embeddings, crear_indice_faiss
-    emb    = generar_o_cargar_embeddings(fragmentos, PKL_PATH.replace(".pkl", ""), modelo_emb)
+
+    emb, _ = generar_o_cargar_embeddings(fragmentos, PKL_PATH.replace(".pkl", ""), modelo_emb)
     indice = crear_indice_faiss(emb)
 
 cargar_modelo()
@@ -355,4 +356,4 @@ def manejar_interaccion(n_enviar, n_submit, n_limpiar, pregunta, mensajes_actual
 
 
 if __name__ == "__main__":
-    app.run(debug=False, host="0.0.0.0", port=8050)
+    app.run(debug=True, port=8050)
